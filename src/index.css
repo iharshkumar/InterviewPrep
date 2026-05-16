@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Color Palette - Premium Dark Theme */
+  --color-bg: #050505;
+  --color-surface: #121212;
+  --color-surface-hover: #1e1e1e;
+  
+  --color-primary: #6366f1; /* Indigo */
+  --color-primary-hover: #818cf8;
+  --color-accent: #06b6d4; /* Cyan for neon touches */
+  
+  --color-text: #f8fafc;
+  --color-text-muted: #94a3b8;
+  
+  --color-border: rgba(255, 255, 255, 0.08);
+
+  /* Typography */
+  --font-family: 'Outfit', sans-serif;
+  
+  /* Layout & Spacing */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-12: 3rem;
+
+  /* Effects */
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  
+  /* Glassmorphism */
+  --glass-bg: rgba(18, 18, 18, 0.7);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+  background: none;
+}
+
+/* Glassmorphism Utility */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: var(--glass-border);
+  border-radius: 16px;
+}
+
+/* Gradient Text Utility */
+.gradient-text {
+  background: linear-gradient(to right, var(--color-primary), var(--color-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

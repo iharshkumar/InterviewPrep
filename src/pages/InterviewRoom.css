@@ -1,0 +1,341 @@
+.interview-room-fullscreen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 100px 20px 20px;
+  gap: var(--spacing-4);
+}
+
+.interview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-4) var(--spacing-6);
+  border-radius: 12px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.timer-badge-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 8px 24px;
+  border-radius: 100px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  border: 1px solid var(--color-border);
+}
+
+.text-red {
+  color: #ef4444;
+  animation: pulse-red 1s infinite;
+}
+
+@keyframes pulse-red {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.interview-body {
+  display: flex;
+  flex: 1;
+  gap: var(--spacing-4);
+  overflow: hidden;
+}
+
+.main-question-panel {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-8);
+  overflow-y: auto;
+}
+
+.question-container-large {
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  height: 100%;
+}
+
+.question-text-large {
+  font-size: 1.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-bottom: var(--spacing-4);
+}
+
+.answer-section-large {
+  flex: 1;
+}
+
+.mcq-options-large {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.mcq-label-large {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-6);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid var(--color-border);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 1.125rem;
+}
+
+.mcq-label-large:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mcq-label-large.selected {
+  border-color: var(--color-primary);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.mcq-label-large input[type="radio"] {
+  accent-color: var(--color-primary);
+  width: 24px;
+  height: 24px;
+}
+
+.subjective-input-large {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  padding: var(--spacing-6);
+  border-radius: 12px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--color-border);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 1.125rem;
+  resize: none;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.subjective-input-large:focus {
+  border-color: var(--color-primary);
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.subjective-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: var(--spacing-3);
+}
+
+.subjective-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.dictate-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--color-primary-hover);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.dictate-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+.dictate-btn.listening {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+  animation: pulse-border 1.5s infinite;
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.question-navigation-large {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--spacing-6);
+  margin-top: auto;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Sidebar Widgets */
+.interview-side-widgets {
+  flex: 1;
+  max-width: 350px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.ai-widget {
+  flex: 1;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.user-widget {
+  height: 200px;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+
+.live-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* Mirror effect */
+}
+
+.cam-placeholder-small {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #121212, #1e1e1e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+.cam-placeholder-small.offline {
+  background: #0a0a0a;
+}
+
+.widget-label {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+}
+
+.pulsing {
+  border: 1px solid var(--color-primary);
+  animation: subtle-pulse 2s infinite;
+}
+
+@keyframes subtle-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+
+.controls-widget {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+  border-radius: 12px;
+}
+
+.control-btn-small {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  border: none;
+  cursor: pointer;
+}
+
+.control-btn-small:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.control-btn-small.muted {
+  background: #ef4444;
+}
+
+.control-btn-small.muted:hover {
+  background: #dc2626;
+}
+
+.question-type-badge {
+  font-size: 0.875rem;
+  padding: 4px 12px;
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--color-primary-hover);
+  border-radius: 100px;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.end-call-btn {
+  background-color: #ef4444;
+}
+
+.end-call-btn:hover {
+  background-color: #dc2626;
+}
+
+@media (max-width: 1024px) {
+  .interview-body {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  
+  .interview-side-widgets {
+    max-width: 100%;
+    flex-direction: row;
+    height: 200px;
+    flex-shrink: 0;
+  }
+  
+  .subjective-input-large {
+    min-height: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .interview-side-widgets {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .interview-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+}

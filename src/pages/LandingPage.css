@@ -1,0 +1,126 @@
+.landing-page {
+  display: flex;
+  min-height: 100vh;
+  padding-top: 100px; /* Space for navbar */
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 10%;
+  z-index: 10;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: var(--color-primary-hover);
+  padding: 6px 16px;
+  border-radius: 100px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-6);
+  width: fit-content;
+}
+
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-primary);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--color-primary);
+}
+
+.hero-title {
+  font-size: 4.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: var(--spacing-6);
+  letter-spacing: -0.02em;
+}
+
+.hero-description {
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+  max-width: 500px;
+  margin-bottom: var(--spacing-8);
+}
+
+.hero-actions {
+  display: flex;
+  gap: var(--spacing-4);
+}
+
+.landing-3d-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+}
+
+.canvas-wrapper {
+  width: 600px;
+  height: 600px;
+  position: relative;
+}
+
+/* Background glows */
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  z-index: 0;
+  opacity: 0.5;
+}
+
+.orb-1 {
+  width: 400px;
+  height: 400px;
+  background-color: rgba(99, 102, 241, 0.3);
+  top: 10%;
+  right: 10%;
+}
+
+.orb-2 {
+  width: 500px;
+  height: 500px;
+  background-color: rgba(6, 182, 212, 0.2);
+  bottom: -10%;
+  left: -10%;
+}
+
+@media (max-width: 1024px) {
+  .landing-page {
+    flex-direction: column;
+    padding-top: 120px;
+  }
+  
+  .landing-content {
+    padding: 0 5%;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .hero-title {
+    font-size: 3.5rem;
+  }
+  
+  .hero-description {
+    max-width: 100%;
+  }
+  
+  .canvas-wrapper {
+    width: 400px;
+    height: 400px;
+    margin-top: 2rem;
+  }
+}

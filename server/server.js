@@ -109,7 +109,10 @@ ${resumeText.substring(0, 3000)} // Truncating to avoid massive token counts if 
     
     if (!questionsArray || questionsArray.length === 0) {
        console.log("No valid questions array found");
-       return res.status(500).json({ error: 'Failed to generate valid questions' });
+       return res.status(500).json({ 
+         error: 'Failed to generate valid questions', 
+         details: groqData.error ? groqData.error.message : 'Invalid API response format' 
+       });
     }
 
     res.json({ questions: questionsArray });

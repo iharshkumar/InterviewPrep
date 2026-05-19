@@ -81,7 +81,7 @@ const Dashboard = () => {
           } 
         });
       } else {
-        alert('Failed to generate questions.');
+        alert('Failed to generate questions: ' + (data.details || data.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error generating questions:', error);

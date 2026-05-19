@@ -31,7 +31,7 @@ const Dashboard = () => {
     formData.append('resume', fileToUpload);
 
     try {
-      const response = await fetch('http://localhost:3001/api/upload', {
+      const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
@@ -57,7 +57,7 @@ const Dashboard = () => {
 
     setIsGenerating(true);
     try {
-      const response = await fetch('http://localhost:3001/api/generate-questions', {
+      const response = await fetch('/api/generate-questions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeText, role, difficulty, section }),

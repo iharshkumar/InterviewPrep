@@ -6,26 +6,15 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 app.use(cors());
 app.use(express.json());
 
-// Set up multer for file upload
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
+// Set up multer for file upload using memory storage
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-
-// Ensure uploads directory exists
-if (!fs.existsSync('uploads')) {
-  fs.mkdirSync('uploads');
-}
 
 // 1. Upload and parse resume
 app.post('/api/upload', upload.single('resume'), async (req, res) => {
@@ -34,18 +23,14 @@ app.post('/api/upload', upload.single('resume'), async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded' });
     }
     
-    const filePath = path.join(__dirname, req.file.path);
-    const dataBuffer = fs.readFileSync(filePath);
+    const dataBuffer = req.file.buffer;
     
     const data = await pdfParse(dataBuffer);
-    
-    // Optionally delete the file after parsing if we don't need to keep it
-    // fs.unlinkSync(filePath);
     
     res.json({ 
       success: true, 
       text: data.text,
-      filename: req.file.filename
+      filename: req.file.originalname
     });
   } catch (error) {
     console.error('Error parsing PDF:', error);
@@ -96,29 +81,27 @@ ${resumeText.substring(0, 3000)} // Truncating to avoid massive token counts if 
   `;
 
   try {
-    console.log('Sending request to Ollama...');
-    const ollamaResponse = await fetch('http://localhost:11434/api/generate', {
+    console.log('Sending request to Groq...');
+    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_API_KEY}`
+      },
       body: JSON.stringify({
-        model: 'llama3.2',
-        prompt: prompt,
-        stream: false,
-        format: 'json',
-        options: {
-          num_predict: 4096
-        }
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: 'json_object' }
       })
     });
 
-    const ollamaData = await ollamaResponse.json();
-    console.log('Ollama Response:', ollamaData.response);
+    const groqData = await groqResponse.json();
     
     let parsedData;
     try {
-      parsedData = JSON.parse(ollamaData.response);
+      parsedData = JSON.parse(groqData.choices[0].message.content);
     } catch (e) {
-      console.log('Failed to parse JSON, raw:', ollamaData.response);
+      console.log('Failed to parse JSON, raw:', groqData);
       parsedData = { questions: [] };
     }
 
@@ -181,24 +164,24 @@ app.post('/api/evaluate', async (req, res) => {
   `;
 
   try {
-    const ollamaResponse = await fetch('http://localhost:11434/api/generate', {
+    const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_API_KEY}`
+      },
       body: JSON.stringify({
-        model: 'llama3.2',
-        prompt: prompt,
-        stream: false,
-        format: 'json',
-        options: {
-          temperature: 0.1 // Lower temperature for more consistent, strict scoring
-        }
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: 'json_object' },
+        temperature: 0.1
       })
     });
 
-    const ollamaData = await ollamaResponse.json();
+    const groqData = await groqResponse.json();
     let result;
     try {
-      result = JSON.parse(ollamaData.response);
+      result = JSON.parse(groqData.choices[0].message.content);
       
       // Manually calculate overall score to avoid LLM math hallucinations
       if (result.detailedResults && Array.isArray(result.detailedResults)) {
@@ -232,8 +215,8 @@ app.post('/api/evaluate', async (req, res) => {
       }
       
     } catch (e) {
-      console.error('Failed to parse Ollama JSON:', ollamaData.response);
-      result = { error: "Evaluation failed to generate valid JSON", raw: ollamaData.response, overallScore: 0 };
+      console.error('Failed to parse Groq JSON:', groqData);
+      result = { error: "Evaluation failed to generate valid JSON", raw: groqData, overallScore: 0 };
     }
     
     res.json(result);
@@ -243,6 +226,10 @@ app.post('/api/evaluate', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}`);
-});
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Server listening at http://localhost:${port}`);
+  });
+}
+
+module.exports = app;

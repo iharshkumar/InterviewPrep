@@ -213,7 +213,7 @@ const InterviewRoom = () => {
     const nextSection = pendingSections[0];
     
     try {
-      const response = await fetch('http://localhost:3001/api/generate-questions', {
+      const response = await fetch('/api/generate-questions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeText, role, difficulty, section: nextSection }),
@@ -345,7 +345,7 @@ const InterviewRoom = () => {
   async function handleSubmit() {
     setIsSubmitting(true);
     try {
-      const response = await fetch('http://localhost:3001/api/evaluate', {
+      const response = await fetch('/api/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers, questions, role }),

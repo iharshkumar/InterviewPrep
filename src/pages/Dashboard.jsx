@@ -49,7 +49,7 @@ const Dashboard = () => {
     }
   };
 
-  const handleStartSession = async () => {
+  const handleStartSession = async (section) => {
     if (!resumeText) {
       alert('Please wait for the resume to finish parsing, or upload a resume.');
       return;
@@ -60,13 +60,26 @@ const Dashboard = () => {
       const response = await fetch('http://localhost:3001/api/generate-questions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resumeText, role, difficulty }),
+        body: JSON.stringify({ resumeText, role, difficulty, section }),
       });
       
       const data = await response.json();
       if (data.questions) {
+        // We start with HR, so the remaining sections are Technical and Behavioral
+        const pendingSections = ['Technical', 'Behavioral'];
+        
         // Navigate to interview room and pass questions via state
-        navigate('/interview', { state: { questions: data.questions, role } });
+        navigate('/interview', { 
+          state: { 
+            questions: data.questions, 
+            role,
+            difficulty,
+            resumeText,
+            pendingSections,
+            allQuestions: data.questions,
+            allAnswers: {}
+          } 
+        });
       } else {
         alert('Failed to generate questions.');
       }
@@ -174,17 +187,20 @@ const Dashboard = () => {
               <option value="senior">Senior</option>
             </select>
             
-            <Button 
-              variant="primary" 
-              onClick={handleStartSession}
-              disabled={isGenerating || isUploading}
-            >
-              {isGenerating ? (
-                <><Loader2 className="spinning" size={18} /> Generating...</>
-              ) : (
-                <><Play size={18} /> Start Session</>
-              )}
-            </Button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px', width: '100%' }}>
+              <Button 
+                variant="primary" 
+                onClick={() => handleStartSession('HR')}
+                disabled={isGenerating || isUploading}
+                style={{ background: 'linear-gradient(to right, #6366f1, #a855f7)', border: 'none' }}
+              >
+                {isGenerating ? (
+                  <><Loader2 className="spinning" size={18} /> Generating...</>
+                ) : (
+                  <><Play size={18} /> Start Full Sequential Interview (60 min)</>
+                )}
+              </Button>
+            </div>
           </div>
           {!resumeText && <p className="warning-text mt-2" style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '8px' }}>Please upload your resume first to start.</p>}
         </div>

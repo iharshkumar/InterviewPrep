@@ -55,35 +55,40 @@ app.post('/api/upload', upload.single('resume'), async (req, res) => {
 
 // 2. Generate Questions using local Ollama model
 app.post('/api/generate-questions', async (req, res) => {
-  const { resumeText, role, difficulty } = req.body;
+  const { resumeText, role, difficulty, section } = req.body;
   
-  if (!resumeText || !role) {
-    return res.status(400).json({ error: 'Missing resume text or role' });
+  if (!resumeText || !role || !section) {
+    return res.status(400).json({ error: 'Missing resume text, role, or section' });
   }
 
   const prompt = `You are an expert technical interviewer. I will provide you with a candidate's resume text and the role they are applying for.
   
 Role: ${role}
 Difficulty: ${difficulty || 'mid'}
+Interview Section: ${section}
 
 Resume:
 ${resumeText.substring(0, 3000)} // Truncating to avoid massive token counts if necessary
 
   Task:
-  Generate exactly 8 Multiple Choice Questions (MCQs) and 7 Subjective questions (15 questions total) based on the candidate's experience and the role. 
-  The questions should test their specific skills mentioned in the resume.
+  Generate exactly 5 questions specifically for the ${section} phase of the interview.
+  The questions should be highly relevant to this specific section and the candidate's experience.
+  Mix Multiple Choice Questions (mcq) and Subjective questions.
 
   Return ONLY a valid JSON object containing a 'questions' array. Do not return any other text, markdown blocks, or explanation.
+  Each question MUST include a 'section' field indicating its category: "${section}".
   {
     "questions": [
       {
         "type": "mcq",
+        "section": "${section}",
         "question": "The question text",
         "options": ["A", "B", "C", "D"],
         "correctAnswer": "A"
       },
       {
         "type": "subjective",
+        "section": "${section}",
         "question": "The question text"
       }
     ]
@@ -152,24 +157,23 @@ app.post('/api/evaluate', async (req, res) => {
 
   STRICT SCORING RULES:
   1. RELEVANCE & GIBBERISH CHECK: If the userAnswer is "I don't know", gibberish (e.g., "asdf", "random text"), completely unrelated to the question (e.g., answering with "apple" to a coding question), or extremely short/evasive, you MUST give it a score of 0 or "Incorrect" IMMEDIATELY.
-  2. MCQ SCORING: If the answer is exactly correct according to the 'correctAnswer', it is "Correct". Otherwise, it is "Incorrect" (0 points).
-  3. SUBJECTIVE SCORING: Evaluate technical depth, accuracy, and professionalism. 
-     - A "good" answer must explain 'how' and 'why'. 
-     - Generic or "textbook only" definitions get a maximum of 4/10. 
-     - Real-world examples or deep technical insights get 8/10+.
-     - Empty or nonsense answers get 0/10.
-  4. OVERALL SCORE CALCULATION: The 'overallScore' MUST be the mathematical average of all individual question scores. Do NOT inflate this number. If the candidate fails most questions, the score must be very low (e.g., 0-20).
+  2. MCQ SCORING: If the answer is exactly correct according to the 'correctAnswer', it is "Correct". Otherwise, it is "Incorrect".
+  3. SUBJECTIVE SCORING: Evaluate technical depth, accuracy, and length. 
+     - DO NOT give random marks. Base the score STRICTLY on the length and detail of the answer.
+     - The more relevant words and detail, the more marks. 
+     - If the answer is fully wrong, completely irrelevant, or empty, you MUST give exactly 0/10.
+     - If the answer is very short (few words), give it a low mark (1/10 to 3/10) even if it is somewhat correct.
+     - If the answer is long, detailed, and explains 'how' and 'why', give it a high mark (7/10 to 10/10).
   
-  Return ONLY a valid JSON object with the following structure:
+  Return ONLY a valid JSON object with the following structure. Do NOT include an overall score, just the detailed results and general feedback:
   {
-    "overallScore": number (0-100),
     "generalFeedback": "A sharp, honest, and professional critique of the candidate's performance.",
     "detailedResults": [
       {
         "question": "The original question",
         "userAnswer": "What the user wrote",
         "correctSolution": "A detailed explanation of the ideal answer",
-        "score": "Correct/Incorrect OR X/10",
+        "score": "Correct" or "Incorrect" (for MCQ) OR "X/10" (for Subjective),
         "reasoning": "A brief explanation of why you gave this specific score based on the candidate's input."
       }
     ]
@@ -195,9 +199,41 @@ app.post('/api/evaluate', async (req, res) => {
     let result;
     try {
       result = JSON.parse(ollamaData.response);
+      
+      // Manually calculate overall score to avoid LLM math hallucinations
+      if (result.detailedResults && Array.isArray(result.detailedResults)) {
+        let totalPossibleScore = 0;
+        let earnedScore = 0;
+        
+        result.detailedResults.forEach(item => {
+          if (item.score === "Correct") {
+            totalPossibleScore += 1;
+            earnedScore += 1;
+          } else if (item.score === "Incorrect") {
+            totalPossibleScore += 1;
+          } else if (typeof item.score === 'string' && item.score.includes('/10')) {
+            // Subjective questions carry a weight of 4
+            totalPossibleScore += 4;
+            const numericScore = parseFloat(item.score.split('/')[0]);
+            if (!isNaN(numericScore)) {
+              earnedScore += (numericScore / 10) * 4;
+            }
+          }
+        });
+        
+        // Calculate percentage
+        if (totalPossibleScore > 0) {
+          result.overallScore = Math.round((earnedScore / totalPossibleScore) * 100);
+        } else {
+          result.overallScore = 0;
+        }
+      } else {
+        result.overallScore = 0;
+      }
+      
     } catch (e) {
       console.error('Failed to parse Ollama JSON:', ollamaData.response);
-      result = { error: "Evaluation failed to generate valid JSON", raw: ollamaData.response };
+      result = { error: "Evaluation failed to generate valid JSON", raw: ollamaData.response, overallScore: 0 };
     }
     
     res.json(result);

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Video, VideoOff, MessageSquare, PhoneOff, CheckCircle, Clock } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, MessageSquare, PhoneOff, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import * as faceapi from 'face-api.js';
 import Scene from '../components/Scene';
 import Button from '../components/Button';
 import './InterviewRoom.css';
@@ -12,17 +13,108 @@ const InterviewRoom = () => {
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
 
-  const { questions, role } = location.state || { questions: [], role: 'unknown' };
+  const { 
+    questions: initialQuestions, 
+    role, 
+    resumeText, 
+    difficulty, 
+    pendingSections: initialPendingSections 
+  } = location.state || { questions: [], role: 'unknown', pendingSections: [] };
   
+  const [questions, setQuestions] = useState(initialQuestions || []);
+  const [pendingSections, setPendingSections] = useState(initialPendingSections || []);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [timeLeft, setTimeLeft] = useState(3600); // 60 minutes (3600 seconds)
+  const [timeLeft, setTimeLeft] = useState(1200); // 20 minutes (1200 seconds)
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFetchingNext, setIsFetchingNext] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [interimText, setInterimText] = useState('');
   const recognitionRef = useRef(null);
   const intendedListeningRef = useRef(false);
+  const isListeningStateRef = useRef(false);
   const videoRef = useRef(null);
+
+  // Proctoring States
+  const [violationCount, setViolationCount] = useState(0);
+  const [violationMessage, setViolationMessage] = useState('');
+  const [showViolation, setShowViolation] = useState(false);
+
+  const handleViolation = (message) => {
+    setViolationCount(prev => prev + 1);
+    setViolationMessage(message);
+    setShowViolation(true);
+    setTimeout(() => setShowViolation(false), 5000);
+  };
+
+  // Proctoring - Copy, Paste, Right Click
+  useEffect(() => {
+    const blockAction = (e) => {
+      // If the user is dictating, sometimes the OS triggers paste. We ignore it.
+      if (isListeningStateRef.current) return;
+      e.preventDefault();
+      handleViolation("Copy/Paste/Right-Click is strictly prohibited during the interview.");
+    };
+
+    document.addEventListener('copy', blockAction);
+    document.addEventListener('cut', blockAction);
+    document.addEventListener('paste', blockAction);
+    document.addEventListener('contextmenu', blockAction);
+
+    return () => {
+      document.removeEventListener('copy', blockAction);
+      document.removeEventListener('cut', blockAction);
+      document.removeEventListener('paste', blockAction);
+      document.removeEventListener('contextmenu', blockAction);
+    };
+  }, []);
+
+  // Proctoring - Block Save (Ctrl+S / Cmd+S)
+  useEffect(() => {
+    const blockSave = (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        handleViolation("Saving the page is strictly prohibited during the interview.");
+      }
+    };
+    document.addEventListener('keydown', blockSave);
+    return () => document.removeEventListener('keydown', blockSave);
+  }, []);
+
+  // Proctoring - Tab Switch & Fullscreen
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        handleViolation("Tab switching is prohibited! You must stay on the interview tab.");
+      }
+    };
+    
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        handleViolation("Exiting Full-Screen is prohibited!");
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  // Load Face API models
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+      } catch (err) {
+        console.error("Failed to load face detection models:", err);
+      }
+    };
+    loadModels();
+  }, []);
 
   // Setup Live Webcam
   useEffect(() => {
@@ -44,7 +136,6 @@ const InterviewRoom = () => {
         }
       } catch (err) {
         console.error("Camera access denied or error:", err);
-        alert("Camera error: " + err.message + "\n\nPlease ensure your browser allows camera access for localhost.");
       }
     };
     
@@ -55,6 +146,36 @@ const InterviewRoom = () => {
         stream.getTracks().forEach(t => t.stop());
       }
     };
+  }, [camOn]);
+
+  const faceMissCountRef = useRef(0);
+  // Face Detection Interval
+  useEffect(() => {
+    if (!camOn || !videoRef.current) return;
+    
+    const interval = setInterval(async () => {
+      if (videoRef.current && videoRef.current.readyState === 4) {
+        try {
+          const detections = await faceapi.detectAllFaces(videoRef.current, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.2 }));
+          if (detections.length === 0) {
+            faceMissCountRef.current += 1;
+            if (faceMissCountRef.current >= 3) {
+              handleViolation("No face detected! Please look at the camera.");
+              faceMissCountRef.current = 0; // reset
+            }
+          } else {
+            faceMissCountRef.current = 0; // reset if found
+            if (detections.length > 1) {
+              handleViolation("Multiple faces detected! You must be alone during the interview.");
+            }
+          }
+        } catch (e) {
+          console.error("Face detection error:", e);
+        }
+      }
+    }, 3000);
+    
+    return () => clearInterval(interval);
   }, [camOn]);
 
   useEffect(() => {
@@ -83,6 +204,36 @@ const InterviewRoom = () => {
 
   const handleAnswerChange = (val) => {
     setAnswers({ ...answers, [currentQuestionIndex]: val });
+  };
+
+  const handleProceedNextSection = async () => {
+    if (pendingSections.length === 0) return;
+    
+    setIsFetchingNext(true);
+    const nextSection = pendingSections[0];
+    
+    try {
+      const response = await fetch('http://localhost:3001/api/generate-questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeText, role, difficulty, section: nextSection }),
+      });
+      const data = await response.json();
+      
+      if (data.questions) {
+        setQuestions(prev => [...prev, ...data.questions]);
+        setPendingSections(prev => prev.slice(1));
+        setCurrentQuestionIndex(prev => prev + 1);
+        setTimeLeft(1200); // reset 20 min timer
+      } else {
+        alert("Failed to load next section. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error fetching next section:", error);
+      alert("Network error.");
+    } finally {
+      setIsFetchingNext(false);
+    }
   };
 
   const handleNext = () => {
@@ -141,39 +292,51 @@ const InterviewRoom = () => {
     recognition.onerror = (event) => {
       console.error("Speech recognition error:", event.error);
       if (event.error === 'not-allowed') {
-        alert("Microphone access blocked! Please click the camera/mic icon in your browser's URL bar and allow access.");
+        alert("Microphone access blocked!\n\n1. Check the camera/mic icon in your browser's URL bar.\n2. On Mac: Go to System Settings -> Privacy & Security -> Microphone and ensure your browser is checked.");
         intendedListeningRef.current = false;
+      } else if (event.error !== 'no-speech') {
+        // Reset state on other errors like 'aborted' or 'network'
+        intendedListeningRef.current = false;
+        isListeningStateRef.current = false;
+        setIsListening(false);
       }
     };
 
     recognition.onend = () => {
       if (intendedListeningRef.current) {
-        // Automatically restart to prevent it from getting stuck/pausing
         try {
           recognition.start();
-        } catch (e) {}
+        } catch (e) {
+          intendedListeningRef.current = false;
+          isListeningStateRef.current = false;
+          setIsListening(false);
+          setInterimText('');
+        }
       } else {
+        isListeningStateRef.current = false;
         setIsListening(false);
         setInterimText('');
       }
     };
 
     intendedListeningRef.current = true;
+    isListeningStateRef.current = true;
     setIsListening(true);
     recognition.start();
     recognitionRef.current = recognition;
   };
 
-  // Cleanup recognition on unmount or question change
   useEffect(() => {
     if (intendedListeningRef.current && recognitionRef.current) {
       intendedListeningRef.current = false;
+      isListeningStateRef.current = false;
       setIsListening(false);
       recognitionRef.current.stop();
     }
     return () => {
       if (recognitionRef.current) {
         intendedListeningRef.current = false;
+        isListeningStateRef.current = false;
         recognitionRef.current.stop();
       }
     };
@@ -202,12 +365,39 @@ const InterviewRoom = () => {
 
   return (
     <div className="interview-room-fullscreen">
+      
+      {/* Violation Alert overlay */}
+      <AnimatePresence>
+        {showViolation && (
+          <motion.div 
+            className="violation-alert"
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 20 }}
+            exit={{ opacity: 0, y: -50 }}
+          >
+            <AlertTriangle color="#ff4a4a" size={24} />
+            <div>
+              <h4>Proctoring Violation Logged</h4>
+              <p>{violationMessage}</p>
+            </div>
+            <div className="violation-count">
+              Violations: {violationCount}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header with Timer and Navigation */}
       <div className="interview-header glass-panel">
         <div className="header-left">
           <MessageSquare size={20} className="text-primary" />
           <h2 style={{ fontSize: '1.25rem' }}>Question {currentQuestionIndex + 1} of {questions.length}</h2>
-          <span className="question-type-badge">
+          {currentQuestion.section && (
+            <span className="question-type-badge" style={{ marginLeft: '10px', background: 'rgba(99, 102, 241, 0.2)' }}>
+              {currentQuestion.section} Section
+            </span>
+          )}
+          <span className="question-type-badge" style={{ marginLeft: '10px' }}>
             {currentQuestion.type === 'mcq' ? 'Multiple Choice' : 'Subjective'}
           </span>
         </div>
@@ -263,7 +453,6 @@ const InterviewRoom = () => {
                     placeholder="Type or dictate your detailed answer here..."
                     value={(answers[currentQuestionIndex] || '') + (isListening ? interimText : '')}
                     onChange={(e) => {
-                      // Only allow manual typing to update state if we are not actively overwriting it with voice
                       setAnswers(prev => ({...prev, [currentQuestionIndex]: e.target.value}));
                     }}
                     rows={10}
@@ -278,9 +467,15 @@ const InterviewRoom = () => {
               </Button>
               
               {currentQuestionIndex === questions.length - 1 ? (
-                <Button variant="primary" onClick={handleSubmit} disabled={isSubmitting}>
-                  {isSubmitting ? 'Evaluating...' : 'Submit Interview'}
-                </Button>
+                pendingSections.length > 0 ? (
+                  <Button variant="primary" onClick={handleProceedNextSection} disabled={isFetchingNext}>
+                    {isFetchingNext ? 'Loading...' : `Proceed to ${pendingSections[0]}`}
+                  </Button>
+                ) : (
+                  <Button variant="primary" onClick={handleSubmit} disabled={isSubmitting}>
+                    {isSubmitting ? 'Evaluating...' : 'Submit Full Interview'}
+                  </Button>
+                )
               ) : (
                 <Button variant="primary" onClick={handleNext}>
                   Next Question
@@ -305,6 +500,8 @@ const InterviewRoom = () => {
                 playsInline 
                 muted 
                 className="live-video"
+                width="320"
+                height="240"
               />
             ) : (
               <div className="cam-placeholder-small offline">

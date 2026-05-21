@@ -90,6 +90,9 @@ const Dashboard = () => {
       setIsGenerating(false);
     }
   };
+
+
+
   return (
     <div className="dashboard-page">
       <motion.div 
@@ -187,22 +190,22 @@ const Dashboard = () => {
               <option value="senior">Senior</option>
             </select>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px', width: '100%' }}>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '16px', width: '100%', flexWrap: 'wrap' }}>
               <Button 
                 variant="primary" 
                 onClick={() => handleStartSession('HR')}
                 disabled={isGenerating || isUploading}
-                style={{ background: 'linear-gradient(to right, #6366f1, #a855f7)', border: 'none' }}
+                style={{ background: 'linear-gradient(to right, #6366f1, #a855f7)', border: 'none', flex: 1, minWidth: '220px' }}
               >
                 {isGenerating ? (
                   <><Loader2 className="spinning" size={18} /> Generating...</>
                 ) : (
-                  <><Play size={18} /> Start Full Sequential Interview (60 min)</>
+                  <><Play size={18} /> Start Full Interview (60 min)</>
                 )}
               </Button>
             </div>
           </div>
-          {!resumeText && <p className="warning-text mt-2" style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '8px' }}>Please upload your resume first to start.</p>}
+          {!resumeText && <p className="warning-text mt-2" style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '8px' }}>Please upload your resume first to start the Full sequential interview.</p>}
         </div>
       </motion.div>
     </div>

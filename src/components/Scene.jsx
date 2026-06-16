@@ -13,7 +13,7 @@ const AnimatedSphere = () => {
   });
 
   return (
-    <Sphere ref={sphereRef} visible args={[1, 100, 200]} scale={2}>
+    <Sphere ref={sphereRef} visible args={[1, 100, 200]} scale={1.5}>
       <MeshDistortMaterial
         color="#6366f1"
         attach="material"
@@ -28,7 +28,7 @@ const AnimatedSphere = () => {
 
 const Scene = () => {
   return (
-    <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
+    <Canvas camera={{ position: [0, 0, 6.0], fov: 45 }}>
       <ambientLight intensity={0.5} />
       <directionalLight position={[10, 10, 10]} intensity={1.5} color="#06b6d4" />
       <directionalLight position={[-10, -10, -10]} intensity={1} color="#6366f1" />

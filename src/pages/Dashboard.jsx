@@ -1,19 +1,54 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Clock, TrendingUp, History, UploadCloud, FileText, Loader2 } from 'lucide-react';
+import { Play, Clock, TrendingUp, History, UploadCloud, FileText, Loader2, Code } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { authFetch, user } = useAuth();
   const [file, setFile] = useState(null);
   const [resumeText, setResumeText] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [role, setRole] = useState('frontend');
   const [difficulty, setDifficulty] = useState('mid');
+  const [profileName, setProfileName] = useState('User');
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    // Pre-load user details and existing resume from MongoDB profile on mount
+    authFetch('/api/profile')
+      .then(res => {
+        if (res.ok) return res.json();
+        throw new Error('Unauthenticated');
+      })
+      .then(data => {
+        if (data.name && data.name !== 'AI Candidate') {
+          setProfileName(data.name);
+        } else if (user?.displayName) {
+          setProfileName(user.displayName);
+        } else if (user?.email) {
+          // Fallback to name extracted from email prefix
+          const emailPrefix = user.email.split('@')[0];
+          setProfileName(emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1));
+        } else if (data.name) {
+          setProfileName(data.name);
+        }
+        
+        if (data.resumeText && data.resumeText.trim() !== '' && !data.resumeText.includes('Upload a PDF resume')) {
+          setResumeText(data.resumeText);
+        }
+        if (data.resumeFilename && data.resumeFilename !== 'No resume uploaded') {
+          setFile({ name: data.resumeFilename });
+        }
+      })
+      .catch(err => {
+        console.error('Failed to pre-load profile in dashboard:', err);
+      });
+  }, [user]);
 
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
@@ -31,7 +66,7 @@ const Dashboard = () => {
     formData.append('resume', fileToUpload);
 
     try {
-      const response = await fetch('/api/upload', {
+      const response = await authFetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
@@ -57,9 +92,8 @@ const Dashboard = () => {
 
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/generate-questions', {
+      const response = await authFetch('/api/generate-questions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeText, role, difficulty, section }),
       });
       
@@ -100,7 +134,7 @@ const Dashboard = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="dashboard-title">Welcome back, User</h1>
+        <h1 className="dashboard-title">Welcome back, {profileName}</h1>
         <p className="dashboard-subtitle">Ready for your next mock interview?</p>
       </motion.div>
 
@@ -149,7 +183,29 @@ const Dashboard = () => {
           </div>
         </motion.div>
 
-
+        {/* Coding Practice Lab */}
+        <motion.div 
+          className="glass-panel upload-card coding-lab-card"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="upload-header">
+            <h3>Coding Practice Lab</h3>
+            <p className="dashboard-subtitle" style={{ fontSize: '0.875rem' }}>Practice DSA & track statistics</p>
+          </div>
+          
+          <div 
+            className="coding-lab-zone"
+            onClick={() => navigate('/coding-test')}
+          >
+            <div className="upload-state">
+              <Code size={32} color="var(--color-primary)" className="animate-pulse" />
+              <p>Practice Algorithmic Challenges</p>
+              <span className="small-text">Arrays, Pointers, Stack, DP, and more</span>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       <motion.div 

@@ -1,0 +1,40 @@
+{
+  "name": "John Doe Test",
+  "email": "jane.doe@example.com",
+  "role": "Senior Software Engineer Test",
+  "experience": "senior",
+  "github": "https://github.com/johndoe",
+  "linkedin": "https://linkedin.com/in/johndoe",
+  "resumeFilename": "resume-jane-doe.pdf",
+  "resumeText": "Jane Doe - Fullstack Engineer with 3+ years experience building React and Node.js solutions...",
+  "stats": {
+    "interviewsCompleted": 3,
+    "avgScore": 84,
+    "technicalAbility": 8.8,
+    "communicationDepth": 8,
+    "codingProgress": 75
+  },
+  "history": [
+    {
+      "id": 1,
+      "role": "React Developer",
+      "date": "2026-06-12",
+      "score": 88,
+      "type": "Behavioral + Technical"
+    },
+    {
+      "id": 2,
+      "role": "Node.js Architect",
+      "date": "2026-06-13",
+      "score": 80,
+      "type": "System Design"
+    },
+    {
+      "id": 3,
+      "role": "Frontend Developer",
+      "date": "2026-06-14",
+      "score": 84,
+      "type": "DSA Coding Room"
+    }
+  ]
+}

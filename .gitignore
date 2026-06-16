@@ -11,6 +11,9 @@ lerna-debug.log*
 node_modules
 server/node_modules
 
+.env
+.env.local
+
 # Uploads
 server/uploads
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Video, VideoOff, MessageSquare, PhoneOff, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import * as faceapi from 'face-api.js';
 import Scene from '../components/Scene';
 import Button from '../components/Button';
@@ -10,6 +11,7 @@ import './InterviewRoom.css';
 const InterviewRoom = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { authFetch } = useAuth();
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
 
@@ -213,7 +215,7 @@ const InterviewRoom = () => {
     const nextSection = pendingSections[0];
     
     try {
-      const response = await fetch('/api/generate-questions', {
+      const response = await authFetch('/api/generate-questions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resumeText, role, difficulty, section: nextSection }),
@@ -345,7 +347,7 @@ const InterviewRoom = () => {
   async function handleSubmit() {
     setIsSubmitting(true);
     try {
-      const response = await fetch('/api/evaluate', {
+      const response = await authFetch('/api/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers, questions, role }),

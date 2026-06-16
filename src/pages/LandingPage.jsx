@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
-import Scene from '../components/Scene';
 import { ArrowRight, Video, X, ShieldAlert, Mic, BarChart, Code, Play, Pause, Volume2, VolumeX, Terminal, Cpu } from 'lucide-react';
 import { dsaQuestions } from '../data/dsaQuestions';
 import './LandingPage.css';
@@ -370,23 +369,16 @@ const LandingPage = () => {
   const [showDemo, setShowDemo] = useState(false);
 
   const handleStartCodingTest = () => {
-    const questionPool = dsaQuestions.medium;
-    // Pick 3 random questions
-    const shuffled = [...questionPool].sort(() => 0.5 - Math.random());
-    const selectedQuestions = shuffled.slice(0, 3);
-
-    navigate('/coding-test', {
-      state: {
-        questions: selectedQuestions,
-        role: 'Fullstack Developer',
-        difficulty: 'mid',
-        resumeText: ''
-      }
-    });
+    navigate('/coding-test');
   };
   
   return (
     <div className="landing-page">
+      <video className="landing-bg-video" autoPlay loop muted playsInline>
+        <source src="/Video.mp4" type="video/mp4" />
+      </video>
+      <div className="landing-video-overlay" />
+
       <AnimatePresence>
         {showDemo && (
           <DemoModal 
@@ -425,7 +417,7 @@ const LandingPage = () => {
               variant="coding" 
               onClick={handleStartCodingTest}
             >
-              Start Coding Interview (60 min) <Code size={18} style={{ marginLeft: '8px' }} />
+              Coding Lab <Code size={18} style={{ marginLeft: '8px' }} />
             </Button>
             <Button variant="secondary" onClick={() => setShowDemo(true)}>
               <Video size={18} /> Watch Demo
@@ -434,20 +426,6 @@ const LandingPage = () => {
         </motion.div>
       </div>
 
-      <div className="landing-3d-container">
-        <motion.div 
-          className="canvas-wrapper"
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, delay: 0.2 }}
-        >
-          <Scene />
-        </motion.div>
-      </div>
-      
-      {/* Decorative background glows */}
-      <div className="glow-orb orb-1"></div>
-      <div className="glow-orb orb-2"></div>
     </div>
   );
 };

@@ -95,7 +95,7 @@
 
 .upload-card {
   padding: var(--spacing-6);
-  grid-column: span 2;
+  grid-column: span 1;
 }
 
 @media (max-width: 1024px) {
@@ -122,12 +122,30 @@
 
 .upload-zone:hover {
   border-color: var(--color-primary);
-  background: rgba(99, 102, 241, 0.05);
+  background: rgba(255, 107, 0, 0.05);
 }
 
 .upload-zone.has-file {
   border-color: #10b981;
   border-style: solid;
+}
+
+.coding-lab-zone {
+  border: 2px dashed rgba(255, 107, 0, 0.15);
+  border-radius: 12px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: rgba(0,0,0,0.2);
+}
+
+.coding-lab-zone:hover {
+  border-color: var(--color-primary);
+  background: rgba(255, 107, 0, 0.05);
+  box-shadow: 0 0 15px rgba(255, 107, 0, 0.1);
 }
 
 .upload-state {

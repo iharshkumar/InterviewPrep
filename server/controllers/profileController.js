@@ -5,25 +5,33 @@ const Interview = require('../models/Interview');
  * Fetch the user profile from MongoDB and compute statistics dynamically from past interview records
  */
 const getProfile = async (req, res) => {
-  const firebaseUid = req.user.uid;
-  const userEmail = req.user.email || 'user@example.com';
-  const userName = req.user.name || 'AI Candidate';
+  const loggedInUid = req.user.uid;
+  const firebaseUid = req.query.uid || loggedInUid;
+  const isOwnProfile = firebaseUid === loggedInUid;
 
   try {
     // 1. Find or create the user profile
     let user = await User.findOne({ firebaseUid });
     if (!user) {
-      user = new User({
-        firebaseUid,
-        name: userName,
-        email: userEmail,
-        role: 'Software Engineer',
-        experience: 'mid'
-      });
-      await user.save();
-    } else {
+      if (isOwnProfile) {
+        const userEmail = req.user.email || 'user@example.com';
+        const userName = req.user.name || 'AI Candidate';
+        user = new User({
+          firebaseUid,
+          name: userName,
+          email: userEmail,
+          role: 'Software Engineer',
+          experience: 'mid'
+        });
+        await user.save();
+      } else {
+        return res.status(404).json({ error: 'User profile not found' });
+      }
+    } else if (isOwnProfile) {
       // Sync name or email if they are empty/default and we have better data from login
       let updated = false;
+      const userName = req.user.name || 'AI Candidate';
+      const userEmail = req.user.email || 'user@example.com';
       if ((user.name === 'AI Candidate' || !user.name) && userName !== 'AI Candidate') {
         user.name = userName;
         updated = true;
@@ -43,8 +51,8 @@ const getProfile = async (req, res) => {
     // 3. Compute stats dynamically
     const interviewsCompleted = history.length;
     
-    const totalScore = history.reduce((sum, item) => sum + item.score, 0);
-    const avgScore = interviewsCompleted > 0 ? Math.round(totalScore / interviewsCompleted) : 0;
+    const calculatedScore = history.reduce((sum, item) => sum + item.score, 0);
+    const avgScore = interviewsCompleted > 0 ? Math.round(calculatedScore / interviewsCompleted) : 0;
 
     // Calculate coding specific progress
     const codingInterviews = history.filter(item => item.type.includes('Coding') || item.type.includes('DSA'));
@@ -54,12 +62,21 @@ const getProfile = async (req, res) => {
 
     // Formulate final response containing details, stats, and chronological history logs
     const responseData = {
+      firebaseUid: user.firebaseUid,
       name: user.name,
       email: user.email,
       role: user.role,
       experience: user.experience,
       github: user.github,
       linkedin: user.linkedin,
+      college: user.college || '',
+      branch: user.branch || '',
+      batch: user.batch || '',
+      year: user.year || '',
+      totalScore: user.totalScore || 0,
+      streak: user.streak || 0,
+      lastActive: user.lastActive || user.createdAt,
+      isOwnProfile,
       resumeFilename: user.resumeFilename || 'No resume uploaded',
       resumeText: user.resumeText || 'Upload a PDF resume in the dashboard to initialize neural parsing...',
       stats: {
@@ -106,7 +123,12 @@ const saveProfile = async (req, res) => {
           role: req.body.role,
           experience: req.body.experience,
           github: req.body.github,
-          linkedin: req.body.linkedin
+          linkedin: req.body.linkedin,
+          college: req.body.college,
+          branch: req.body.branch,
+          batch: req.body.batch,
+          year: req.body.year,
+          lastActive: new Date()
         }
       },
       { new: true }

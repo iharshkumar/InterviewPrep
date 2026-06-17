@@ -15,8 +15,13 @@ app.use('/api', apiRouter);
 
 // Start the server if file is run directly
 if (require.main === module) {
-  // Connect to MongoDB
-  connectDB();
+  // Connect to MongoDB and seed if database is empty
+  connectDB().then(() => {
+    const { seedIfEmpty } = require('./utils/seedLeaderboard');
+    seedIfEmpty();
+  }).catch(err => {
+    console.error('Failed to run database seeder on startup:', err);
+  });
   
   // Initialize Firebase Admin
   initFirebaseAdmin();

@@ -31,6 +31,7 @@ const Navbar = () => {
           {user ? (
             <>
               <Link to="/dashboard" className="nav-link">Dashboard</Link>
+              <Link to="/leaderboard" className="nav-link">Leaderboard</Link>
               <Button variant="secondary" onClick={() => navigate('/profile')}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <CgProfile size={20} />

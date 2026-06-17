@@ -8,8 +8,15 @@ const verifyToken = async (req, res, next) => {
   const { projectId, clientEmail, privateKey } = config.firebase;
   const isFirebaseConfigured = projectId && clientEmail && privateKey;
 
+  let token = null;
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split('Bearer ')[1];
+  } else if (req.query && req.query.token) {
+    token = req.query.token;
+  }
+
+  if (!token) {
     if (!isFirebaseConfigured) {
       req.user = {
         uid: 'mock-user-jane-doe',
@@ -18,10 +25,8 @@ const verifyToken = async (req, res, next) => {
       };
       return next();
     }
-    return res.status(401).json({ error: 'Unauthorized: Missing or invalid Authorization header format' });
+    return res.status(401).json({ error: 'Unauthorized: Missing or invalid Authorization credentials' });
   }
-
-  const token = authHeader.split('Bearer ')[1];
 
   if (!isFirebaseConfigured || token === 'mock-token') {
     req.user = {

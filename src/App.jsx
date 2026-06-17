@@ -11,6 +11,7 @@ import CodingResult from './pages/CodingResult';
 import Preloader from './components/Preloader';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
+import Leaderboard from './pages/Leaderboard';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 const ProtectedRoute = ({ children }) => {
@@ -42,6 +43,7 @@ function AppContent() {
           <Route path="/coding-test" element={<ProtectedRoute><CodingTest /></ProtectedRoute>} />
           <Route path="/coding-results" element={<ProtectedRoute><CodingResult /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
         </Routes>
       </AnimatePresence>
     </motion.div>

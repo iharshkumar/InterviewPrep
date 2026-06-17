@@ -6,7 +6,8 @@ import {
   RefreshCw, AlertCircle, ExternalLink, Info, CheckCircle2, ChevronRight
 } from 'lucide-react';
 import { FaGithub, FaLinkedin } from 'react-icons/fa';
-import { SiLeetcode, SiCodeforces } from 'react-icons/si';
+import { SiLeetcode, SiCodeforces, SiCodechef, SiGeeksforgeeks } from 'react-icons/si';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/Button';
 import './Profile.css';
@@ -268,6 +269,10 @@ const CodingStrengthGauge = ({ score }) => {
 
 const Profile = () => {
   const { authFetch, user } = useAuth();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const viewedUid = queryParams.get('uid');
+
   const [profile, setProfile] = useState(null);
   const [codingData, setCodingData] = useState({ codingProfiles: {}, codingStats: {} });
   
@@ -276,10 +281,16 @@ const Profile = () => {
     email: '',
     role: '',
     experience: 'mid',
+    linkedin: '',
+    college: '',
+    branch: '',
+    batch: '',
+    year: '',
     githubUsername: '',
     leetcodeUsername: '',
     codeforcesHandle: '',
-    linkedin: ''
+    codechefHandle: '',
+    gfgUsername: ''
   });
 
   const [formErrors, setFormErrors] = useState({});
@@ -291,12 +302,15 @@ const Profile = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   const fetchAllProfileData = () => {
+    const profileUrl = viewedUid ? `/api/profile?uid=${viewedUid}` : '/api/profile';
+    const statsUrl = viewedUid ? `/api/profile/coding-stats?uid=${viewedUid}` : '/api/profile/coding-stats';
+
     Promise.all([
-      authFetch('/api/profile').then(res => {
+      authFetch(profileUrl).then(res => {
         if (!res.ok) throw new Error('Failed to load profile');
         return res.json();
       }),
-      authFetch('/api/profile/coding-stats').then(res => {
+      authFetch(statsUrl).then(res => {
         if (!res.ok) throw new Error('Failed to load coding stats');
         return res.json();
       })
@@ -310,9 +324,15 @@ const Profile = () => {
           role: profileData.role || 'Software Engineer',
           experience: profileData.experience || 'mid',
           linkedin: profileData.linkedin || '',
+          college: profileData.college || '',
+          branch: profileData.branch || '',
+          batch: profileData.batch || '',
+          year: profileData.year || '',
           githubUsername: statsData.codingProfiles?.github || '',
           leetcodeUsername: statsData.codingProfiles?.leetcode || '',
-          codeforcesHandle: statsData.codingProfiles?.codeforces || ''
+          codeforcesHandle: statsData.codingProfiles?.codeforces || '',
+          codechefHandle: statsData.codingProfiles?.codechef || '',
+          gfgUsername: statsData.codingProfiles?.gfg || ''
         });
         setIsLoading(false);
       })
@@ -324,7 +344,7 @@ const Profile = () => {
 
   useEffect(() => {
     fetchAllProfileData();
-  }, [user]);
+  }, [user, location.search]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -341,7 +361,8 @@ const Profile = () => {
   const handleSyncProfiles = async () => {
     setIsSyncing(true);
     try {
-      const res = await authFetch('/api/profile/sync-coding-profiles', { method: 'POST' });
+      const url = viewedUid ? `/api/profile/sync-coding-profiles?uid=${viewedUid}` : '/api/profile/sync-coding-profiles';
+      const res = await authFetch(url, { method: 'POST' });
       const data = await res.json();
       if (data.success) {
         setCodingData(data);
@@ -378,13 +399,21 @@ const Profile = () => {
           email: formData.email,
           role: formData.role,
           experience: formData.experience,
-          linkedin: formData.linkedin
+          linkedin: formData.linkedin,
+          college: formData.college,
+          branch: formData.branch,
+          batch: formData.batch,
+          year: formData.year
         })
       });
 
       if (!profileRes.ok) throw new Error('Failed to update standard profile');
       const updatedProfile = await profileRes.json();
-      setProfile(updatedProfile.profile);
+      setProfile(prev => ({
+        ...prev,
+        ...updatedProfile.profile,
+        isOwnProfile: true
+      }));
 
       // 2. Save coding handles and trigger fetch
       const codingRes = await authFetch('/api/profile/coding-profiles', {
@@ -392,7 +421,9 @@ const Profile = () => {
         body: JSON.stringify({
           github: formData.githubUsername,
           leetcode: formData.leetcodeUsername,
-          codeforces: formData.codeforcesHandle
+          codeforces: formData.codeforcesHandle,
+          codechef: formData.codechefHandle,
+          gfg: formData.gfgUsername
         })
       });
 
@@ -411,6 +442,9 @@ const Profile = () => {
       if (codingResults.codingProfiles) {
         setCodingData(codingResults);
       }
+
+      // Refresh all computed stats and historical evaluation logs
+      fetchAllProfileData();
     } catch (err) {
       console.error(err);
       triggerToast('Failed to update profile details', 'error');
@@ -424,22 +458,28 @@ const Profile = () => {
   const hasConnectedProfiles = !!(
     codingData.codingProfiles?.github || 
     codingData.codingProfiles?.leetcode || 
-    codingData.codingProfiles?.codeforces
+    codingData.codingProfiles?.codeforces ||
+    codingData.codingProfiles?.codechef ||
+    codingData.codingProfiles?.gfg
   );
 
   const getCombinedScore = () => {
     const gh = stats.github || {};
     const lc = stats.leetcode || {};
     const cf = stats.codeforces || {};
+    const cc = stats.codechef || {};
+    const gfg = stats.gfg || {};
     
     const ghScore = Math.min((gh.totalStars || 0) * 20 + (gh.contributions || 0) * 1.5 + (gh.repositories || 0) * 3, 1000);
     const lcScore = Math.min((lc.totalSolved || 0) * 3 + (lc.contestRating || 0) * 0.4, 1000);
     const cfScore = Math.min((cf.currentRating || 0) * 0.5 + (cf.problemsSolved || 0) * 3, 1000);
+    const ccScore = Math.min((cc.rating || 0) * 0.5 + (cc.problemsSolved || 0) * 3, 1000);
+    const gfgScore = Math.min((gfg.score || 0) + (gfg.problemsSolved || 0) * 2, 1000);
     
-    const totalConnected = [gh.lastSyncedAt, lc.lastSyncedAt, cf.lastSyncedAt].filter(Boolean).length;
+    const totalConnected = [gh.lastSyncedAt, lc.lastSyncedAt, cf.lastSyncedAt, cc.lastSyncedAt, gfg.lastSyncedAt].filter(Boolean).length;
     if (totalConnected === 0) return 0;
     
-    return Math.round((ghScore + lcScore + cfScore) / 3);
+    return Math.round((ghScore + lcScore + cfScore + ccScore + gfgScore) / totalConnected);
   };
 
   const strengthScore = getCombinedScore();
@@ -449,7 +489,9 @@ const Profile = () => {
     const times = [
       stats.github?.lastSyncedAt,
       stats.leetcode?.lastSyncedAt,
-      stats.codeforces?.lastSyncedAt
+      stats.codeforces?.lastSyncedAt,
+      stats.codechef?.lastSyncedAt,
+      stats.gfg?.lastSyncedAt
     ].filter(Boolean).map(t => new Date(t));
     if (times.length === 0) return null;
     const maxTime = new Date(Math.max(...times));
@@ -457,6 +499,8 @@ const Profile = () => {
   };
 
   const lastSyncedTimestamp = getLastSyncedAtString();
+
+  const isReadOnly = profile && !profile.isOwnProfile;
 
   if (isLoading) {
     return (
@@ -499,6 +543,7 @@ const Profile = () => {
                 value={formData.name} 
                 onChange={handleChange}
                 required
+                disabled={isReadOnly}
               />
             </div>
 
@@ -510,6 +555,7 @@ const Profile = () => {
                 value={formData.email} 
                 onChange={handleChange}
                 required
+                disabled={isReadOnly}
               />
             </div>
 
@@ -521,15 +567,66 @@ const Profile = () => {
                 value={formData.role} 
                 onChange={handleChange}
                 required
+                disabled={isReadOnly}
               />
             </div>
 
             <div className="form-group">
               <label>Experience Level</label>
-              <select name="experience" value={formData.experience} onChange={handleChange}>
+              <select name="experience" value={formData.experience} onChange={handleChange} disabled={isReadOnly}>
                 <option value="junior">Junior Developer (0-2 years)</option>
                 <option value="mid">Mid-Level Developer (2-5 years)</option>
                 <option value="senior">Senior Developer (5+ years)</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>College / University</label>
+              <input 
+                type="text" 
+                name="college" 
+                value={formData.college} 
+                onChange={handleChange}
+                placeholder="e.g. PES College of Engineering"
+                disabled={isReadOnly}
+              />
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Branch / Department</label>
+                <input 
+                  type="text" 
+                  name="branch" 
+                  value={formData.branch} 
+                  onChange={handleChange}
+                  placeholder="e.g. CSE"
+                  disabled={isReadOnly}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Graduation Batch</label>
+                <input 
+                  type="text" 
+                  name="batch" 
+                  value={formData.batch} 
+                  onChange={handleChange}
+                  placeholder="e.g. 2026"
+                  disabled={isReadOnly}
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Academic Year</label>
+              <select name="year" value={formData.year} onChange={handleChange} disabled={isReadOnly}>
+                <option value="">Select Academic Year</option>
+                <option value="1st Year">1st Year</option>
+                <option value="2nd Year">2nd Year</option>
+                <option value="3rd Year">3rd Year</option>
+                <option value="4th Year">4th Year</option>
+                <option value="Graduated">Graduated</option>
               </select>
             </div>
 
@@ -543,6 +640,7 @@ const Profile = () => {
                   value={formData.linkedin} 
                   onChange={handleChange}
                   placeholder="https://linkedin.com/in/username"
+                  disabled={isReadOnly}
                 />
               </div>
             </div>
@@ -564,6 +662,7 @@ const Profile = () => {
                     onChange={handleChange}
                     placeholder="github_username"
                     className={formErrors.github ? 'input-error-border' : ''}
+                    disabled={isReadOnly}
                   />
                 </div>
                 {formErrors.github && <span className="input-error-msg"><AlertCircle size={10} /> {formErrors.github}</span>}
@@ -581,6 +680,7 @@ const Profile = () => {
                       onChange={handleChange}
                       placeholder="leetcode_username"
                       className={formErrors.leetcode ? 'input-error-border' : ''}
+                      disabled={isReadOnly}
                     />
                   </div>
                   {formErrors.leetcode && <span className="input-error-msg"><AlertCircle size={10} /> {formErrors.leetcode}</span>}
@@ -597,16 +697,55 @@ const Profile = () => {
                       onChange={handleChange}
                       placeholder="cf_handle"
                       className={formErrors.codeforces ? 'input-error-border' : ''}
+                      disabled={isReadOnly}
                     />
                   </div>
                   {formErrors.codeforces && <span className="input-error-msg"><AlertCircle size={10} /> {formErrors.codeforces}</span>}
                 </div>
               </div>
+
+              <div className="form-row" style={{ marginTop: '12px' }}>
+                <div className="form-group">
+                  <label>CodeChef Handle</label>
+                  <div className="input-with-icon">
+                    <SiCodechef size={16} className="input-field-icon" />
+                    <input 
+                      type="text" 
+                      name="codechefHandle" 
+                      value={formData.codechefHandle} 
+                      onChange={handleChange}
+                      placeholder="codechef_handle"
+                      className={formErrors.codechef ? 'input-error-border' : ''}
+                      disabled={isReadOnly}
+                    />
+                  </div>
+                  {formErrors.codechef && <span className="input-error-msg"><AlertCircle size={10} /> {formErrors.codechef}</span>}
+                </div>
+                
+                <div className="form-group">
+                  <label>GeeksforGeeks Username</label>
+                  <div className="input-with-icon">
+                    <SiGeeksforgeeks size={16} className="input-field-icon" />
+                    <input 
+                      type="text" 
+                      name="gfgUsername" 
+                      value={formData.gfgUsername} 
+                      onChange={handleChange}
+                      placeholder="gfg_username"
+                      className={formErrors.gfg ? 'input-error-border' : ''}
+                      disabled={isReadOnly}
+                    />
+                  </div>
+                  {formErrors.gfg && <span className="input-error-msg"><AlertCircle size={10} /> {formErrors.gfg}</span>}
+                </div>
+              </div>
             </div>
 
-            <Button type="submit" variant="primary" className="save-btn" disabled={isSaving || isSyncing}>
-              {isSaving ? 'Validating & Syncing...' : 'Save Changes'}
-            </Button>
+            {!isReadOnly && (
+              <Button type="submit" variant="primary" className="save-btn" disabled={isSaving || isSyncing}>
+                {isSaving ? 'Validating & Syncing...' : 'Save Changes'}
+              </Button>
+            )}
           </form>
         </motion.div>
 
@@ -643,7 +782,7 @@ const Profile = () => {
                 <Trophy size={18} className="section-title-icon text-cyan" />
                 Coding Performance Dashboard
               </h3>
-              {hasConnectedProfiles && (
+              {hasConnectedProfiles && !isReadOnly && (
                 <button 
                   onClick={handleSyncProfiles} 
                   className={`sync-refresh-btn ${isSyncing ? 'loading' : ''}`}
@@ -684,6 +823,18 @@ const Profile = () => {
                     <span className="badge-title">CF Rating</span>
                     <span className="badge-number text-magenta">{stats.codeforces?.currentRating || 0}</span>
                   </div>
+                  {stats.codechef?.rating > 0 && (
+                    <div className="badge-item">
+                      <span className="badge-title">CodeChef</span>
+                      <span className="badge-number text-amber-500">{stats.codechef?.rating || 0}</span>
+                    </div>
+                  )}
+                  {stats.gfg?.problemsSolved > 0 && (
+                    <div className="badge-item">
+                      <span className="badge-title">GFG Solved</span>
+                      <span className="badge-number text-emerald-500">{stats.gfg?.problemsSolved || 0}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Charts Grid */}

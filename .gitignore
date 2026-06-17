@@ -11,8 +11,13 @@ lerna-debug.log*
 node_modules
 server/node_modules
 
+# Environment files
 .env
-.env.local
+server/.env
+.env.example
+
+# Firebase secrets
+firebase-service-account.json
 
 # Uploads
 server/uploads

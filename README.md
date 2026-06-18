@@ -126,4 +126,4 @@ npm.cmd run dev:all
 
 To sign in successfully into the Admin Dashboard at [http://localhost:5175](http://localhost:5175):
 1.  **Google Sign In:** Click "Sign In with Google" and authenticate using an email listed in the `ADMIN_GOOGLE_EMAILS` array.
-2.  **Security PIN Verification:** Enter the 4-digit security PIN: **`7243`**.
+2.  **Security PIN Verification:** Enter the 4-digit security PIN (can be configured in the admin backend auth controller).

@@ -1,105 +1,129 @@
 # MockPrep AI
 
-MockPrep AI is a premium, full-stack AI-powered interview preparation web application. It is designed to provide users with personalized, rigorous, and immersive mock interview simulations based on their uploaded resumes, helping candidates prepare for real-world job interviews.
+MockPrep AI is a premium, full-stack, AI-powered mock interview and DSA coding assessment platform. It helps candidates prepare for real-world tech interviews by parsing their resumes, generating customized interview questions, evaluating coding submissions, and tracking performance through a gamified leaderboard.
 
-## Features
+---
 
-- **AI-Driven Interview Simulations:** Utilizes advanced LLMs (such as Gemini 3.1 Pro or Groq API with Llama 3 models) to conduct highly dynamic, ChatGPT-style conversational interviews.
-- **Resume Parsing & Personalization:** Extracts key details from uploaded PDF resumes to dynamically generate tailored interview questions that match a candidate's experience and applied role.
-- **Live Video & Proctoring Environment:** Integrates a live webcam feed with `face-api.js` for facial tracking, creating a secure and professional interview setting.
-- **Voice-to-Text Dictation:** Captures candidates' verbal responses via the browser's speech recognition API for seamless interaction.
-- **3D Animated Guide:** Features an interactive 3D guide powered by `Three.js` and `@react-three/fiber` to lead users through the 60-minute interview flow.
-- **Performance Dashboard:** A responsive user dashboard that provides post-interview feedback, performance analytics, and actionable insights.
-- **Serverless Ready:** Configured for Vercel deployment with serverless API routes and memory storage for handling file uploads smoothly.
+## 🌟 Key Features
 
-## Tech Stack
+### 🧑‍💻 Candidate Platform (User Side)
+*   **AI-Driven Interviews:** Generates personalized interview questions based on the candidate's resume content, target role, and experience level using LLMs.
+*   **Proctored Interview Room:** Integrates browser speech-to-text dictation and face-tracking using `face-api.js` for an immersive and secure environment.
+*   **DSA Coding Workspace:** An interactive editor to write, run, compile test cases, and get instant AI feedback on code correctness, edge cases, and time/space complexities.
+*   **Platform Profile Sync:** Sync and scrape user stats from popular programming platforms like LeetCode, Codeforces, and HackerRank.
+*   **Real-time Leaderboard:** Gamified student progress with global ranking, badges, and top-three highlights.
+*   **Performance Reports:** Detailed feedback detailing strengths, weaknesses, suggested answers, and overall ratings.
 
-**Frontend:**
-- React 19 (via Vite)
-- Three.js & React Three Fiber (for 3D elements)
-- Framer Motion (for smooth animations)
-- face-api.js (for facial tracking)
-- Lucide React (for UI icons)
-- React Router DOM
+### 🛡️ Administrative Portal (Admin Side)
+*   **Analytical Dashboard:** Displays high-level stats like active user count, average score, and total completed interviews.
+*   **User Management:** Complete table list of all candidates with search, profile inspection, and deletion capabilities.
+*   **Interview Records:** Audit logs for all completed interview rooms, generated questions, and user answers.
+*   **Two-Factor Security Login:** Protected Google OAuth sign-in restricted to whitelisted administrator emails, coupled with a mandatory 4-digit hardware-style PIN overlay.
 
-**Backend:**
-- Node.js & Express
-- Multer (Memory Storage for Serverless environments)
-- PDF-Parse (for processing resumes)
-- CORS
+---
 
-## Getting Started
+## 📁 Repository Structure
+
+```
+mockprepgroq/
+├── frontend/           # Vite + React 19 Client application (User side)
+├── backend/            # Express.js Server application (User side)
+├── adminfrontend/      # Vite + React 19 Admin Dashboard (Admin side)
+├── adminbackend/       # Express.js Admin Server (Admin side)
+├── package.json        # Root workspace configuration with monorepo scripts
+└── README.md           # Documentation
+```
+
+---
+
+## ⚙️ Setup & Installation
 
 ### Prerequisites
-- Node.js (v18 or higher)
-- npm or yarn
-- API Keys for your preferred AI models (e.g., Groq API, Gemini)
+*   [Node.js](https://nodejs.org/) (v18 or higher)
+*   [MongoDB](https://www.mongodb.com/) (Local instance or MongoDB Atlas Connection URI)
+*   [Firebase Project](https://firebase.google.com/) (For Auth)
+*   Groq API Key / Gemini API Key (For AI generation & evaluation)
 
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd "mockPrep AI Gemini"
-   ```
-
-2. **Setup the Frontend**
-   Install the necessary dependencies for the React application:
-   ```bash
-   npm install
-   ```
-
-3. **Setup the Backend**
-   Navigate to the `server` directory and install backend dependencies:
-   ```bash
-   cd server
-   npm install
-   ```
-
-### Environment Variables
-
-You will need to configure your environment variables. 
-- Create a `.env` file in the root directory (for Vite/Frontend variables like `VITE_API_URL`).
-- Create a `.env` file in the `server` directory containing your AI API keys (e.g., `GROQ_API_KEY` or `GEMINI_API_KEY`) and backend port configurations.
-
-### Running Locally
-
-1. **Start the Backend Server**
-   ```bash
-   cd server
-   npm start
-   ```
-   *The backend typically runs on `http://localhost:5000` or the port specified in your env file.*
-
-2. **Start the Frontend Development Server**
-   In a new terminal window (from the project root):
-   ```bash
-   npm run dev
-   ```
-   *The frontend will be available at `http://localhost:5173`.*
-
-## Deployment
-
-This project is configured for deployment on [Vercel](https://vercel.com).
-The `vercel.json` file in the root directory specifies the rewrites for the Express backend to operate as serverless functions, and the build scripts handle the frontend Vite build. 
-
-To deploy, simply link the repository to a new Vercel project and ensure all environment variables are added in the Vercel project settings.
-
-## Project Structure
-
+### 1. Install Dependencies
+Run the command below in the **root directory** to install all packages for both the client applications and servers:
+```bash
+npm run install:all
 ```
-mockPrep AI Gemini/
-├── public/               # Static assets
-├── server/               # Express backend application
-│   ├── server.js         # Entry point for backend
-│   └── package.json      # Backend dependencies
-├── src/                  # React frontend source code
-│   ├── components/       # Reusable UI components
-│   ├── pages/            # Page components (Dashboard, InterviewRoom, etc.)
-│   ├── App.jsx           # Main React component
-│   └── main.jsx          # Entry point for React
-├── vercel.json           # Vercel deployment configuration
-├── package.json          # Frontend dependencies and scripts
-├── vite.config.js        # Vite configuration
-└── README.md             # Project documentation
+*If you are running on Windows PowerShell and get an `Execution_Policies` restriction error, use:*
+```powershell
+npm.cmd run install:all
 ```
+
+### 2. Environment Variables (`.env`)
+You must define environmental values inside the respective folders.
+
+#### 🔹 User Backend (`backend/.env`)
+Create `backend/.env` file with:
+```env
+PORT=5000
+MONGODB_URI=your_mongodb_connection_string
+GROQ_API_KEY=your_groq_api_key
+# OR
+GEMINI_API_KEY=your_gemini_api_key
+JWT_SECRET=your_jwt_secret
+```
+
+#### 🔹 Admin Backend (`adminbackend/.env`)
+Create `adminbackend/.env` file with:
+```env
+PORT=3002
+MONGODB_URI=your_mongodb_connection_string
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=adminpassword
+JWT_SECRET=your_jwt_secret
+ADMIN_GOOGLE_EMAILS=allowed_admin1@gmail.com,allowed_admin2@gmail.com
+FIREBASE_PROJECT_ID=your_firebase_project_id
+FIREBASE_CLIENT_EMAIL=your_firebase_client_email
+FIREBASE_PRIVATE_KEY="your_firebase_private_key"
+```
+
+#### 🔹 User Frontend (`frontend/.env`)
+Create `frontend/.env` file with:
+```env
+VITE_API_URL=http://localhost:5000
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+...
+```
+
+#### 🔹 Admin Frontend (`adminfrontend/.env`)
+Create `adminfrontend/.env` file with:
+```env
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_firebase_app_id
+```
+
+---
+
+## 🚀 Running the Applications
+
+Use the helper monorepo scripts in the root directory to start servers:
+
+| Command | Action | URL / Port |
+| :--- | :--- | :--- |
+| `npm run dev` | Starts User Frontend & User Backend | Frontend: `http://localhost:5173`<br>Backend: `http://localhost:5000` |
+| `npm run dev:admin` | Starts Admin Frontend & Admin Backend | Frontend: `http://localhost:5175`<br>Backend: `http://localhost:3002` |
+| `npm run dev:all` | Starts User + Admin Frontend/Backend Concurrently | Runs all 4 services at the same time |
+
+*If you are running on Windows PowerShell and get an `Execution_Policies` restriction error, use `.cmd` extension:*
+```powershell
+# E.g.
+npm.cmd run dev:admin
+npm.cmd run dev:all
+```
+
+---
+
+## 🔒 Admin Credentials & Login
+
+To sign in successfully into the Admin Dashboard at [http://localhost:5175](http://localhost:5175):
+1.  **Google Sign In:** Click "Sign In with Google" and authenticate using an email listed in the `ADMIN_GOOGLE_EMAILS` array.
+2.  **Security PIN Verification:** Enter the 4-digit security PIN: **`7243`**.

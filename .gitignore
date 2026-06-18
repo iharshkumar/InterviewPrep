@@ -11,11 +11,15 @@ lerna-debug.log*
 node_modules
 frontend/node_modules
 backend/node_modules
+adminfrontend/node_modules
+adminbackend/node_modules
 
 # Environment files
 .env
 frontend/.env
 backend/.env
+adminfrontend/.env
+adminbackend/.env
 .env.example
 
 # Firebase secrets
@@ -27,6 +31,7 @@ backend/uploads
 # Build
 dist
 frontend/dist
+adminfrontend/dist
 dist-ssr
 *.local
 

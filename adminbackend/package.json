@@ -1,0 +1,16 @@
+{
+  "name": "mockprep-ai-adminbackend",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node --env-file=.env server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "firebase-admin": "^14.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^9.7.0"
+  }
+}

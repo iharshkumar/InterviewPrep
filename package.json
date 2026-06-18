@@ -3,13 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "install:all": "npm install --prefix frontend && npm install --prefix backend",
+    "install:all": "npm install --prefix frontend && npm install --prefix backend && npm install --prefix adminfrontend && npm install --prefix adminbackend",
     "dev": "concurrently \"npm run dev --prefix frontend\" \"npm run start --prefix backend\"",
+    "dev:admin": "concurrently \"npm run dev --prefix adminfrontend\" \"npm run start --prefix adminbackend\"",
+    "dev:all": "concurrently \"npm run dev --prefix frontend\" \"npm run start --prefix backend\" \"npm run dev --prefix adminfrontend\" \"npm run start --prefix adminbackend\"",
     "dev:frontend": "npm run dev --prefix frontend",
     "dev:backend": "npm run start --prefix backend",
+    "dev:adminfrontend": "npm run dev --prefix adminfrontend",
+    "dev:adminbackend": "npm run start --prefix adminbackend",
     "build:frontend": "npm run build --prefix frontend",
-    "build": "npm run build:frontend",
-    "lint:frontend": "npm run lint --prefix frontend"
+    "build:adminfrontend": "npm run build --prefix adminfrontend",
+    "build": "npm run build:frontend && npm run build:adminfrontend"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

@@ -1,12 +1,13 @@
 const { initializeApp, cert } = require('firebase-admin/app');
-const config = require('./config');
 
 const initFirebaseAdmin = () => {
   try {
-    const { projectId, clientEmail, privateKey } = config.firebase;
-    
+    const projectId = process.env.FIREBASE_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
     if (!projectId) {
-      console.warn('WARNING: Firebase Project ID is missing in your environment config.');
+      console.warn('WARNING: FIREBASE_PROJECT_ID is missing in Admin Backend. Firebase verification will not function.');
       return;
     }
 
@@ -18,7 +19,7 @@ const initFirebaseAdmin = () => {
           cleanedPrivateKey = cleanedPrivateKey.slice(1, -1);
         }
         const formattedPrivateKey = cleanedPrivateKey.replace(/\\n/g, '\n');
-        
+
         initializeApp({
           credential: cert({
             projectId,
@@ -26,24 +27,21 @@ const initFirebaseAdmin = () => {
             privateKey: formattedPrivateKey
           })
         });
-        
-        console.log('Firebase Admin SDK initialized successfully with Service Account credentials!');
+        console.log('Admin Backend: Firebase Admin SDK initialized successfully with Service Account credentials!');
         return;
       } catch (error) {
-        console.warn('Failed to initialize Firebase Admin SDK with Service Account credentials. Falling back to Project ID only.');
+        console.warn('Admin Backend: Failed to initialize with Service Account credentials (e.g. invalid key). Falling back to Project ID only.');
       }
     }
-    
+
     // Fallback: Initialize with just projectId
     initializeApp({
       projectId
     });
-    console.log(`Firebase Admin SDK initialized successfully using Project ID: ${projectId} (Token verification enabled)`);
+    console.log(`Admin Backend: Firebase Admin SDK initialized successfully using Project ID: ${projectId} (Token verification enabled)`);
   } catch (error) {
-    console.error('Error initializing Firebase Admin SDK:', error.message);
+    console.error('Admin Backend: Error initializing Firebase Admin SDK:', error.message);
   }
 };
 
-module.exports = {
-  initFirebaseAdmin
-};
+module.exports = { initFirebaseAdmin };
